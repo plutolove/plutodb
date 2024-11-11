@@ -39,6 +39,14 @@ class Error {
     error_frames_.emplace_back(file, line, func, err);
   }
 
+  std::string debugString() const {
+    std::string res;
+    for (auto& frame : error_frames_) {
+      res.append(frame.debugString());
+    }
+    return res;
+  }
+
  private:
   std::vector<ErrorFrame> error_frames_;
 };
@@ -88,6 +96,10 @@ class Maybe<T,
 
   ErrorPtr stackError() const { return std::get<1>(data_or_error_); }
 
+  std::string errorStr() const {
+    return std::get<1>(data_or_error_)->debugString();
+  }
+
  private:
   std::variant<ValueType, ErrorPtr> data_or_error_;
 };
@@ -112,6 +124,10 @@ class Maybe<T, guard::ValueGuard<IsScalar_v<T> && not std::is_same_v<T, void> &&
 
   ErrorPtr stackError() const { return std::get<1>(data_or_error_); }
 
+  std::string errorStr() const {
+    return std::get<1>(data_or_error_)->debugString();
+  }
+
  private:
   std::variant<T, ErrorPtr> data_or_error_;
 };
@@ -132,6 +148,10 @@ class Maybe<T, guard::ValueGuard<std::is_same_v<T, void>>> {
   void* Data_UserCanNotUse() const { return nullptr; }
 
   ErrorPtr stackError() const { return std::get<1>(data_or_error_); }
+
+  std::string errorStr() const {
+    return std::get<1>(data_or_error_)->debugString();
+  }
 
  private:
   Maybe() : data_or_error_(nullptr) {}
@@ -161,6 +181,10 @@ class Maybe<T,
 
   ErrorPtr stackError() const { return std::get<1>(data_or_error_); }
 
+  std::string errorStr() const {
+    return std::get<1>(data_or_error_)->debugString();
+  }
+
  private:
   std::variant<ValueType, ErrorPtr> data_or_error_;
 };
@@ -178,14 +202,14 @@ inline Error&& AddErrorFrame(Error&& err, const std::string& file,
 }
 
 #define NewError(msg) \
-  std::make_shared<Error>(__FILE__, __LINE__, __FUNCTION__, msg);
+  std::make_shared<pluto::Error>(__FILE__, __LINE__, __FUNCTION__, msg);
 
 #define OK_OR_RETURN(expr, msg) \
   do {                          \
     if (expr) {                 \
       return NewError(msg);     \
     }                           \
-  } while (0);
+  } while (0)
 
 #define JUST(...)                                                           \
   ({                                                                        \

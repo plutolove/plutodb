@@ -11,12 +11,20 @@ add_requires("boost 1.85.0")
 add_requires("gtest v1.13.0")
 add_requires("libpg_query duckdb_parser-1.1.3")
 
+target("pluto")
+    set_kind("static")
+    add_includedirs("./src")
+    add_files("src/*/*.cpp")
+    add_files("src/*/*/*.cpp")
+    add_packages("fmt", "spdlog", "boost", "libpg_query")
+
+
+
 target("plutodb")
     set_kind("binary")
     add_includedirs("./src")
     add_files("src/*.cpp")
-    add_files("src/*/*.cpp")
-    add_files("src/*/*/*.cpp")
+    add_deps("pluto")
     add_packages("fmt", "spdlog", "boost", "libpg_query")
 
 
@@ -28,6 +36,7 @@ for _, file in ipairs(os.files("test/test_*.cpp")) do
         add_files("test/" .. name .. ".cpp")
         add_includedirs("./src")
         add_tests("default")
+        add_deps("pluto")
         add_packages("fmt", "spdlog", "boost", "libpg_query", "gtest")
 end
 

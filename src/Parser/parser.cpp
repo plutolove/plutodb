@@ -12,8 +12,6 @@ Maybe<void> Parser::parse(const std::string& sql) {
   OK_OR_RETURN(parser.success,
                fmt::format("{}, location: {}", parser.error_message,
                            parser.error_location));
-  auto val = Maybe<void>::Ok();
-  JUST(val);
   return Maybe<void>::Ok();
 }
 
