@@ -32,11 +32,11 @@ class AutoRegistrationFactory {
   std::unique_ptr<std::unordered_map<std::string, std::shared_ptr<Base>>> objs_;
 };
 
-#define OF_PP_INTERNAL_CAT(a, b) a##b
+#define INTERNAL_CAT(a, b) a##b
 
-#define OF_PP_CAT(a, b) OF_PP_INTERNAL_CAT(a, b)
+#define PP_CAT(a, b) INTERNAL_CAT(a, b)
 
-#define REGISTER_VAR_NAME OF_PP_CAT(g_registry_var, __COUNTER__)
+#define REGISTER_VAR_NAME PP_CAT(g_registry_var, __COUNTER__)
 
 #define REGISTER_CLASS(Base, Derived)                            \
   static AutoRegistrationFactory<Base>::RawRegisterType<Derived> \

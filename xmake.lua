@@ -15,6 +15,8 @@ target("plutodb")
     set_kind("binary")
     add_includedirs("./src")
     add_files("src/*.cpp")
+    add_files("src/*/*.cpp")
+    add_files("src/*/*/*.cpp")
     add_packages("fmt", "spdlog", "boost", "libpg_query")
 
 

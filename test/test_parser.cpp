@@ -1,4 +1,5 @@
 #include "Common/log.h"
+#include "Common/maybe.h"
 #include "gtest/gtest.h"
 #include "postgres_parser.hpp"
 
@@ -48,6 +49,11 @@ l_year;)EOF";
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
+  std::string tmp = "sdfgsdfgsdg";
+  pluto::Maybe<void> val = pluto::Maybe<void>::Ok();
+  pluto::Maybe<int> int_val(23);
+  pluto::Maybe<std::string> str_val("sdfgsdf");
+  pluto::Maybe<std::string&> ref_val(tmp);
   return RUN_ALL_TESTS();
 }
 
