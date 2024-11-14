@@ -14,7 +14,9 @@ class Exception : public ExceptionBase {
 
   template <typename... Args>
   Exception(int code, const std::string &fmt, Args &&...args)
-      : ExceptionBase(fmt::format(fmt, std::forward<Args>(args)...), code) {}
+      : ExceptionBase(
+            fmt::format(fmt::runtime(fmt), std::forward<Args>(args)...), code) {
+  }
 
   template <typename... Args>
   Exception(const std::string &file, int64_t line,
@@ -22,7 +24,8 @@ class Exception : public ExceptionBase {
             Args &&...args)
       : ExceptionBase(
             fmt::format("{}:{}, function: {}", file, line, function_name),
-            fmt::format(fmt, std::forward<Args>(args)...), code) {}
+            fmt::format(fmt::runtime(fmt), std::forward<Args>(args)...), code) {
+  }
 
   template <typename... Args>
   Exception(const std::string &file, int64_t line,

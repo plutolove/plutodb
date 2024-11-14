@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "Common/auto_registration_factory.h"
 #include "Common/exception.h"
 #include "Common/log.h"
 #include "Common/maybe.h"
@@ -13,9 +14,18 @@ pluto::Maybe<int> test() {
   return 324;
 }
 
+struct Base {
+  virtual ~Base() {}
+};
+
+struct Derived : public Base {};
+
+REGISTER_CLASS(Base, test, Derived);
+
 int main(int argc, char** argv) {
   LOG_INFO("--------------");
-  pluto::Parser parser;
-  parser.parse("select a, b, c from g;");
+  // pluto::Parser parser;
+  // parser.parse("select a, b, c from g;");
+  // auto* ptr = GET_CLASS(Base, test);
   return 0;
 }

@@ -1,5 +1,3 @@
-
-#include <stdexcept>
 #include <string>
 
 class ExceptionBase : public std::exception {

@@ -1,6 +1,5 @@
 #pragma once
 #include <memory>
-#include <shared_mutex>
 #include <type_traits>
 #include <variant>
 
@@ -75,7 +74,6 @@ class Maybe<T, guard::ValueGuard<!(IsScalar_v<T> || std::is_same_v<T, void>) &&
   Maybe(T&& data) : data_or_err_(std::make_unique<T>(std::move(data))) {}
 
   Maybe(std::unique_ptr<T> ptr) : data_or_err_(std::move(ptr)) {}
-  Maybe(const std::unique_ptr<T>& ptr) : data_or_err_(std::move(ptr)) {}
 
   Maybe(const Error& err) : data_or_err_(std::make_unique<Error>(err)) {}
   Maybe(Error&& err) : data_or_err_(std::make_unique<Error>(std::move(err))) {}
@@ -84,12 +82,19 @@ class Maybe<T, guard::ValueGuard<!(IsScalar_v<T> || std::is_same_v<T, void>) &&
 
   Maybe(Maybe&& data) : data_or_err_(std::move(data.data_or_err_)) {}
 
-  Maybe(const Maybe&) = default;
+  Maybe(const Maybe& src) {
+    if (std::holds_alternative<ValueT>(src)) {
+      data_or_err_ = std::make_unique<T>(*std::get<0>(src.data_or_err_));
+    } else {
+      data_or_err_ = std::make_unique<Error>(*std::get<1>(src.data_or_err_));
+    }
+  }
+
   ~Maybe() = default;
 
   bool isOk() const { return std::holds_alternative<ValueT>(data_or_err_); }
 
-  ValueT data() { return std::move(std::get<ValueT>(data_or_err_)); }
+  ValueT data() { return std::move(std::get<0>(data_or_err_)); }
 
   ErrorPtr error() { return std::get<1>(data_or_err_); }
 
@@ -107,7 +112,14 @@ class Maybe<T, guard::ValueGuard<std::is_same_v<T, void>>> final {
 
   Maybe(Maybe&& data) : data_or_err_(std::move(data.data_or_err_)) {}
 
-  Maybe(const Maybe&) = default;
+  Maybe(const Maybe& src) {
+    if (std::holds_alternative<void*>(src)) {
+      data_or_err_ = std::get<0>(src.data_or_err_);
+    } else {
+      data_or_err_ = std::make_unique<Error>(*std::get<1>(src.data_or_err_));
+    }
+  }
+
   ~Maybe() = default;
 
   static Maybe Ok() { return Maybe(); }
@@ -116,7 +128,7 @@ class Maybe<T, guard::ValueGuard<std::is_same_v<T, void>>> final {
 
   bool isOk() const { return std::holds_alternative<void*>(data_or_err_); }
 
-  ErrorPtr error() { return std::move(std::get<ErrorPtr>(data_or_err_)); }
+  ErrorPtr error() { return std::move(std::get<1>(data_or_err_)); }
 
  private:
   Maybe() : data_or_err_(nullptr) {}
@@ -134,16 +146,22 @@ class Maybe<T, guard::ValueGuard<IsScalar_v<T> && !std::is_reference_v<T>>>
 
   Maybe(ErrorPtr err) : data_or_err_(std::move(err)) {}
 
-  Maybe(Maybe&& data) = default;
+  Maybe(Maybe&& data) : data_or_err_(std::move(data.data_or_err_)) {}
+  Maybe(const Maybe& src) {
+    if (std::holds_alternative<T>(src)) {
+      data_or_err_ = std::get<0>(src.data_or_err_);
+    } else {
+      data_or_err_ = std::make_unique<Error>(*std::get<1>(src.data_or_err_));
+    }
+  }
 
-  Maybe(const Maybe&) = default;
   ~Maybe() = default;
 
   bool isOk() const { return std::holds_alternative<T>(data_or_err_); }
 
   T data() const { return std::get<0>(data_or_err_); }
 
-  ErrorPtr error() { return std::move(std::get<ErrorPtr>(data_or_err_)); }
+  ErrorPtr error() { return std::move(std::get<1>(data_or_err_)); }
 
  private:
   std::variant<T, ErrorPtr> data_or_err_;
@@ -162,16 +180,23 @@ class Maybe<T, guard::ValueGuard<std::is_reference_v<T>>> final {
 
   Maybe(ErrorPtr err) : data_or_err_(std::move(err)) {}
 
-  Maybe(Maybe&& data) = default;
-  Maybe(const Maybe&) = default;
+  Maybe(Maybe&& data) : data_or_err_(std::move(data.data_or_err_)) {}
+  Maybe(const Maybe& src) {
+    if (std::holds_alternative<PtrT>(src)) {
+      data_or_err_ = std::get<0>(src.data_or_err_);
+    } else {
+      data_or_err_ = std::make_unique<Error>(*std::get<1>(src.data_or_err_));
+    }
+  }
+
   ~Maybe() = default;
 
-  bool isOk() const { return std::holds_alternative<T>(data_or_err_); }
+  bool isOk() const { return std::holds_alternative<PtrT>(data_or_err_); }
 
   const T& data() const { return *std::get<0>(data_or_err_); }
   T& data() { return *std::get<0>(data_or_err_); }
 
-  ErrorPtr error() { return std::move(std::get<ErrorPtr>(data_or_err_)); }
+  ErrorPtr error() { return std::move(std::get<1>(data_or_err_)); }
 
  private:
   std::variant<PtrT, ErrorPtr> data_or_err_;

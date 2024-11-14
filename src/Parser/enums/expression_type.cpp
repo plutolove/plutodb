@@ -1,5 +1,7 @@
 #include "Parser/enums/expression_type.h"
 
+#include "Common/exception.h"
+
 namespace pluto {
 
 std::string ExpressionTypeToString(ExpressionType type) {
@@ -280,7 +282,8 @@ ExpressionType NegateComparisonExpression(ExpressionType type) {
       negated_type = ExpressionType::COMPARE_LESSTHAN;
       break;
     default:
-      negated_type = ExpressionType::INVALID;
+      ThrowException("unknow NegateComparisonExpression expression type: {}",
+                     ExpressionTypeToString(type));
   }
   return negated_type;
 }
@@ -307,7 +310,8 @@ ExpressionType FlipComparisonExpression(ExpressionType type) {
       flipped_type = ExpressionType::COMPARE_LESSTHANOREQUALTO;
       break;
     default:
-      flipped_type = ExpressionType::INVALID;
+      ThrowException("unknow FlipComparisonExpression expression type: {}",
+                     ExpressionTypeToString(type));
   }
   return flipped_type;
 }
