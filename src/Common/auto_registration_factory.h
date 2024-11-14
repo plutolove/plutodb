@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_map>
 
+#include "Common/exception.h"
 #include "Common/log.h"
 
 namespace pluto {
@@ -10,6 +11,10 @@ namespace pluto {
 template <typename Base, typename K = std::string>
 class AutoRegistrationFactory {
  public:
+  AutoRegistrationFactory()
+      : objs_map_(
+            new std::unordered_map<std::string, std::unique_ptr<Base>>()) {}
+
   template <typename Derived>
   struct RawRegisterType {
     RawRegisterType(const K& key) {
@@ -18,7 +23,7 @@ class AutoRegistrationFactory {
       if (instance.hasRegist(key)) {
         LOG_ERROR("has registed key: {}", key);
       }
-      instance.getMutableObjs()->emplace(key, std::make_unique<Derived>());
+      instance.MutableObjsMap()->emplace(key, std::make_unique<Derived>());
     }
   };
 
@@ -28,29 +33,41 @@ class AutoRegistrationFactory {
   }
 
   Base* getObj(const K& key) const {
-    auto iter = objs_->find(key);
-    if (iter != objs_->end()) {
+    if (not objs_map_) {
+      LOG_ERROR("objs_ map is nullptr");
+      return nullptr;
+    }
+    auto iter = objs_map_->find(key);
+    if (iter != objs_map_->end()) {
       return iter->second.get();
     }
+    LOG_ERROR("getObj failed, {} not found", key);
+    return nullptr;
+  }
+
+  Base* getObjOrThrow(const K& key) const {
+    if (not objs_map_) {
+      ThrowException("objs_ map is nullptr");
+    }
+    auto iter = objs_map_->find(key);
+    if (iter != objs_map_->end()) {
+      return iter->second.get();
+    }
+    ThrowException("getObj failed, {} not found", key);
     return nullptr;
   }
 
  private:
-  bool has_objs() const { return objs_.get() != nullptr; }
-  const auto& getObjs() const { return objs_; }
+  auto* MutableObjsMap() { return objs_map_.get(); }
+  bool has_objs() const { return objs_map_.get() != nullptr; }
 
   bool hasRegist(const K& key) {
-    auto iter = objs_->find(key);
-    return iter != objs_->end();
+    auto iter = objs_map_->find(key);
+    return iter != objs_map_->end();
   }
 
-  auto* getMutableObjs() {
-    if (not objs_)
-      objs_.reset(new std::unordered_map<std::string, std::unique_ptr<Base>>());
-    return objs_.get();
-  }
-
-  std::unique_ptr<std::unordered_map<std::string, std::unique_ptr<Base>>> objs_;
+  std::unique_ptr<std::unordered_map<std::string, std::unique_ptr<Base>>>
+      objs_map_;
 };
 
 #define INTERNAL_CAT(a, b) a##b
@@ -65,5 +82,8 @@ class AutoRegistrationFactory {
 
 #define GET_CLASS(Base, key) \
   pluto::AutoRegistrationFactory<Base>::Get().getObj(#key)
+
+#define GET_CLASS_OR_THROW(Base, key) \
+  pluto::AutoRegistrationFactory<Base>::Get().getObjOrThrow(#key)
 
 }  // namespace pluto

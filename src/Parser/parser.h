@@ -1,6 +1,7 @@
 #pragma once
+#include <string>
+
 #include "Common/maybe.h"
-#include "postgres_parser.hpp"
 
 namespace pluto {
 
@@ -12,7 +13,7 @@ class Parser {
  public:
   Parser(ParserOptions options = ParserOptions{}) : options_(options) {}
 
-  Maybe<void> parse(const std::string& sql);
+  Maybe<std::string> parse(const std::string& sql);
 
  private:
   ParserOptions options_;

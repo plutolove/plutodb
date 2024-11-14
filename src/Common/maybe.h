@@ -96,7 +96,7 @@ class Maybe<T, guard::ValueGuard<!(IsScalar_v<T> || std::is_same_v<T, void>) &&
 
   ValueT data() { return std::move(std::get<0>(data_or_err_)); }
 
-  ErrorPtr error() { return std::get<1>(data_or_err_); }
+  ErrorPtr error() { return std::move(std::get<1>(data_or_err_)); }
 
  private:
   std::variant<ValueT, ErrorPtr> data_or_err_;
@@ -124,7 +124,7 @@ class Maybe<T, guard::ValueGuard<std::is_same_v<T, void>>> final {
 
   static Maybe Ok() { return Maybe(); }
 
-  void data() const {}
+  void* data() const { return nullptr; }
 
   bool isOk() const { return std::holds_alternative<void*>(data_or_err_); }
 
