@@ -11,7 +11,7 @@ Maybe<std::string> Parser::parse(const std::string& sql) {
   OK_OR_RETURN(parser.success,
                fmt::format("{}, location: {}", parser.error_message,
                            parser.error_location));
-  return "------";
+  return std::string("------");
 }
 
 }  // namespace pluto
