@@ -9,6 +9,7 @@
 #include "Common/type_trait.h"
 #include "fmt/format.h"
 
+namespace pluto {
 class ErrorFrame final {
  public:
   ErrorFrame(const std::string& f, const std::string& func, size_t l,
@@ -60,13 +61,12 @@ class Error final {
 
 using ErrorPtr = std::unique_ptr<Error>;
 
-template <typename T, typename = type_trait::guard::Guard>
+template <typename T, typename = guard::Guard>
 class Maybe;
 
 template <typename T>
-class Maybe<T, type_trait::guard::ValueGuard<not(type_trait::IsScalar_v<T> ||
-                                                 std::is_same_v<T, void>) and
-                                             not std::is_reference_v<T>>>
+class Maybe<T, guard::ValueGuard<!(IsScalar_v<T> || std::is_same_v<T, void>) &&
+                                 !std::is_reference_v<T>>>
     final {
   using ValueT = std::unique_ptr<T>;
 
@@ -98,7 +98,7 @@ class Maybe<T, type_trait::guard::ValueGuard<not(type_trait::IsScalar_v<T> ||
 };
 
 template <typename T>
-class Maybe<T, type_trait::guard::ValueGuard<std::is_same_v<T, void>>> final {
+class Maybe<T, guard::ValueGuard<std::is_same_v<T, void>>> final {
  public:
   Maybe(const Error& err) : data_or_err_(std::make_unique<Error>(err)) {}
   Maybe(Error&& err) : data_or_err_(std::make_unique<Error>(std::move(err))) {}
@@ -124,8 +124,7 @@ class Maybe<T, type_trait::guard::ValueGuard<std::is_same_v<T, void>>> final {
 };
 
 template <typename T>
-class Maybe<T, type_trait::guard::ValueGuard<type_trait::IsScalar_v<T> and
-                                             not std::is_reference_v<T>>>
+class Maybe<T, guard::ValueGuard<IsScalar_v<T> && !std::is_reference_v<T>>>
     final {
  public:
   Maybe(T data) : data_or_err_(data) {}
@@ -151,7 +150,7 @@ class Maybe<T, type_trait::guard::ValueGuard<type_trait::IsScalar_v<T> and
 };
 
 template <typename T>
-class Maybe<T, type_trait::guard::ValueGuard<std::is_reference_v<T>>> final {
+class Maybe<T, guard::ValueGuard<std::is_reference_v<T>>> final {
   using ValueT = typename std::remove_reference_t<T>;
   using PtrT = ValueT*;
 
@@ -190,36 +189,40 @@ inline bool JustIsOk(const Maybe<T>& val) {
   return val.isOk();
 }
 
+}  // namespace pluto
+
 #define STRINGIZEIMP(x) #x
 #define STRINGIZE(x) STRINGIZEIMP(x)
 
-#define OK_OR_RETURN(expr)                                   \
-  do {                                                       \
-    if (not(expr)) {                                         \
-      return Error::CheckFailedError().addErrorFrame(        \
-          __FILE__, __FUNCTION__, __LINE__,                  \
-          fmt::format("Check Failed: {}", STRINGIZE(expr))); \
-    }                                                        \
+#define OK_OR_RETURN(expr, msg)                                            \
+  do {                                                                     \
+    if (not(expr)) {                                                       \
+      return pluto::Error::CheckFailedError().addErrorFrame(               \
+          __FILE__, __FUNCTION__, __LINE__,                                \
+          fmt::format("Check Failed: {}, msg: {}", STRINGIZE(expr), msg)); \
+    }                                                                      \
   } while (0)
 
 #define JUST_VAL_WRAPPER(...) __VA_ARGS__
 
-#define JUST(...)                                                              \
-  ({                                                                           \
-    auto&& just_value = JUST_VAL_WRAPPER(__VA_ARGS__);                         \
-    if (not JustIsOk(just_value)) {                                            \
-      return AddErrFrame(just_value.error(), __FILE__, __FUNCTION__, __LINE__, \
-                         STRINGIZE(__VA_ARGS__));                              \
-    }                                                                          \
-    std::forward<decltype(just_value)>(just_value);                            \
+#define JUST(...)                                                           \
+  ({                                                                        \
+    auto&& just_value = JUST_VAL_WRAPPER(__VA_ARGS__);                      \
+    if (!pluto::JustIsOk(just_value)) {                                     \
+      return pluto::AddErrFrame(just_value.error(), __FILE__, __FUNCTION__, \
+                                __LINE__, STRINGIZE(__VA_ARGS__));          \
+    }                                                                       \
+    std::forward<decltype(just_value)>(just_value);                         \
   }).data()
 
-#define OK_OR_THROW(...)                                                  \
-  do {                                                                    \
-    auto&& just_value = JUST_VAL_WRAPPER(__VA_ARGS__);                    \
-    if (not JustIsOk(just_value)) {                                       \
-      auto err_ = AddErrFrame(just_value.error(), __FILE__, __FUNCTION__, \
-                              __LINE__, STRINGIZE(__VA_ARGS__));          \
-      ThrowException("{}", err_->debugString());                          \
-    }                                                                     \
+#define OK_OR_THROW(...)                                                 \
+  do {                                                                   \
+    auto&& just_value = JUST_VAL_WRAPPER(__VA_ARGS__);                   \
+    if (!pluto::JustIsOk(just_value)) {                                  \
+      auto err_ =                                                        \
+          pluto::AddErrFrame(just_value.error(), __FILE__, __FUNCTION__, \
+                             __LINE__, STRINGIZE(__VA_ARGS__));          \
+      ThrowException("{}", err_->debugString());                         \
+    }                                                                    \
   } while (0)
+

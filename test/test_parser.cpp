@@ -3,6 +3,8 @@
 #include "gtest/gtest.h"
 #include "postgres_parser.hpp"
 
+using namespace pluto;
+
 TEST(plutodb, lib_pg_query_parser) {
   duckdb::PostgresParser parser;
   std::string sql = R"EOF(select
@@ -44,6 +46,39 @@ l_year;)EOF";
   } else {
     LOG_ERROR("compile failed, {} {}", parser.error_message,
               parser.error_location);
+  }
+}
+
+Maybe<int> maybe_test() {
+  OK_OR_RETURN(23 < 2, "");
+  return Maybe<int>(1);
+}
+
+Maybe<int> maybe_test_call() {
+  auto data = JUST(maybe_test());
+  OK_OR_THROW(maybe_test());
+  return Maybe<int>(213);
+}
+
+TEST(maybe, maybe) {
+  Maybe<void> tmp = Maybe<void>::Ok();
+  Maybe<std::string_view> str_v("sdfgsdfg");
+  std::vector<int> x{23, 34, 4356};
+  Maybe<std::vector<int>> vec(x);
+  std::variant<void*, std::shared_ptr<int>> var(nullptr);
+  LOG_INFO("------ is void: {}", std::holds_alternative<void*>(var));
+  int xx = 234;
+  Maybe<int&> ref_int(xx);
+  LOG_INFO("int val: {}", ref_int.data());
+  LOG_INFO("str_view: {}", str_v.data());
+  LOG_INFO("vec: [{}]", fmt::format("{}", fmt::join(*vec.data(), ", ")));
+  auto val = maybe_test();
+  auto val1 = maybe_test_call();
+  if (not val.isOk()) {
+    LOG_INFO("error: {}", val.error()->debugString());
+  }
+  if (not val1.isOk()) {
+    LOG_INFO("value 1 error: {}", val1.error()->debugString());
   }
 }
 
