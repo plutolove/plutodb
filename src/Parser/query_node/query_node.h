@@ -23,16 +23,16 @@ class QueryNode {
  public:
   virtual std::string ToString() const = 0;
 
-  virtual bool Equals(const QueryNode *other) const;
+  // virtual bool Equals(const QueryNode *other) const;
 
   virtual std::unique_ptr<QueryNode> Copy() const = 0;
 
-  std::string ResultModifiersToString() const;
+  // std::string ResultModifiersToString() const;
 
   void AddDistinct();
 
  protected:
-  void CopyProperties(QueryNode &other) const;
+  // void CopyProperties(QueryNode &other) const;
 
  public:
   template <class TARGET>

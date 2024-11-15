@@ -6,7 +6,9 @@
 #include "Common/maybe.h"
 #include "Common/type_name.h"
 #include "Common/type_trait.h"
+#include "DataType/container_type.h"
 #include "Parser/parser.h"
+#include "boost/type_index.hpp"
 #include "fmt/format.h"
 #include "postgres_parser.hpp"
 #include "tabulate/table.hpp"
@@ -53,6 +55,10 @@ int main(int argc, char** argv) {
   t.column(0).format().width(3).multi_byte_characters(true);
   t.column(1).format().multi_byte_characters(true);
   std::cout << std::endl;
-  LOG_INFO("typename: {}", pluto::TypeName<std::vector<std::string>>());
+  LOG_INFO("typename: {}", pluto::TypeName<std::vector<std::string>>);
+  pluto::ContainerType<std::vector, int> type;
+  LOG_INFO("typename : {}", type.typeName());
+
+  LOG_INFO("{}", boost::typeindex::type_id<int>().raw_name());
   return 0;
 }

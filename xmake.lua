@@ -1,8 +1,15 @@
-add_rules("mode.debug", "mode.release")
+-- add_rules("mode.debug", "mode.release")
+
+add_rules("mode.release")
 
 set_languages("c++17")
 
-add_rules("plugin.compile_commands.autoupdate", { outputdir = "build" })
+set_defaultmode("release")
+set_optimize("fastest")
+
+add_defines("NDEBUG")
+
+add_rules("plugin.compile_commands.autoupdate", { outputdir = "build64_release" })
 add_repositories("local-repo https://github.com/plutolove/xmake-repo.git")
 
 add_requires("fmt 10.0.0")
@@ -10,7 +17,7 @@ add_requires("spdlog v1.11.0")
 add_requires("boost 1.85.0")
 add_requires("gtest v1.13.0")
 add_requires("libpg_query duckdb_parser-1.1.3")
-add_requires("tabulate 1.5")
+add_requires("tabulate v1.5")
 
 target("pluto")
     set_kind("static")
