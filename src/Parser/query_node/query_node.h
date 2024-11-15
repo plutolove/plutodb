@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
-#include <vector>
+
+#include "Common/exception.h"
 
 namespace pluto {
 
@@ -18,28 +19,17 @@ class QueryNode {
   virtual ~QueryNode() {}
 
   QueryNodeType type;
-  // std::vector<std::unique_ptr<ResultModifier>> modifiers;
-  // CommonTableExpressionMap cte_map;
-
-  // virtual const std::vector<std::unique_ptr<ParsedExpression>>
-  // &GetSelectList() const = 0;
 
  public:
-  //! Convert the query node to a string
   virtual std::string ToString() const = 0;
 
   virtual bool Equals(const QueryNode *other) const;
 
-  //! Create a copy of this QueryNode
   virtual std::unique_ptr<QueryNode> Copy() const = 0;
 
   std::string ResultModifiersToString() const;
 
-  //! Adds a distinct modifier to the query node
   void AddDistinct();
-
-  // virtual void Serialize(Serializer &serializer) const;
-  // static std::unique_ptr<QueryNode> Deserialize(Deserializer &deserializer);
 
  protected:
   void CopyProperties(QueryNode &other) const;

@@ -1,6 +1,6 @@
 add_rules("mode.debug", "mode.release")
 
-set_languages("c++20")
+set_languages("c++17")
 
 add_rules("plugin.compile_commands.autoupdate", { outputdir = "build" })
 add_repositories("local-repo https://github.com/plutolove/xmake-repo.git")
@@ -10,13 +10,14 @@ add_requires("spdlog v1.11.0")
 add_requires("boost 1.85.0")
 add_requires("gtest v1.13.0")
 add_requires("libpg_query duckdb_parser-1.1.3")
+add_requires("tabulate 1.5")
 
 target("pluto")
     set_kind("static")
     add_includedirs("./src")
     add_files("src/*/*.cpp")
     add_files("src/*/*/*.cpp")
-    add_packages("fmt", "spdlog", "boost", "libpg_query")
+    add_packages("fmt", "spdlog", "boost", "libpg_query", "tabulate")
 
 
 
@@ -25,7 +26,7 @@ target("plutodb")
     add_includedirs("./src")
     add_files("src/*.cpp")
     add_deps("pluto")
-    add_packages("fmt", "spdlog", "boost", "libpg_query")
+    add_packages("fmt", "spdlog", "boost", "libpg_query", "tabulate")
 
 
 for _, file in ipairs(os.files("test/test_*.cpp")) do
@@ -37,6 +38,6 @@ for _, file in ipairs(os.files("test/test_*.cpp")) do
         add_includedirs("./src")
         add_tests("default")
         add_deps("pluto")
-        add_packages("fmt", "spdlog", "boost", "libpg_query", "gtest")
+        add_packages("fmt", "spdlog", "boost", "libpg_query", "gtest", "tabulate")
 end
 

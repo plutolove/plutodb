@@ -4,10 +4,12 @@
 #include "Common/exception.h"
 #include "Common/log.h"
 #include "Common/maybe.h"
+#include "Common/type_name.h"
 #include "Common/type_trait.h"
 #include "Parser/parser.h"
 #include "fmt/format.h"
 #include "postgres_parser.hpp"
+#include "tabulate/table.hpp"
 
 pluto::Maybe<int> test() {
   OK_OR_RETURN(234 < 34, "xxxx");
@@ -35,6 +37,7 @@ pluto::Maybe<void> test_() {
          }
          std ::forward<decltype(just_value)>(just_value);
        }).data());
+  return pluto::Maybe<void>::Ok();
 }
 
 int main(int argc, char** argv) {
@@ -43,5 +46,13 @@ int main(int argc, char** argv) {
   parser.parse("select a, b, c from g;");
   auto* ptr = GET_CLASS(Base, test);
   // auto* ptr1 = GET_CLASS_OR_THROW(Base, test1);
+  tabulate::Table t;
+  t.add_row({"abbbbbbbb", "bcccccccc", "cdddddd"});
+  t.add_row({"1", "23245456562345", "32343454565656hhhhh"});
+  t.print(std::cout);
+  t.column(0).format().width(3).multi_byte_characters(true);
+  t.column(1).format().multi_byte_characters(true);
+  std::cout << std::endl;
+  LOG_INFO("typename: {}", pluto::TypeName<std::vector<std::string>>());
   return 0;
 }
